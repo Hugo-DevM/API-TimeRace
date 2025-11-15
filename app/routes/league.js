@@ -4,7 +4,7 @@ import {
     createLeague,
     updateLeague,
     deleteLeague,
-} from "../controllers/leaguesController.js";
+} from "../controllers/leagueController.js";
 import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();

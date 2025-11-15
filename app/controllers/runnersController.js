@@ -1,7 +1,7 @@
 import pool from "../utils/db.js";
 
 export const getRunnersByLeague = async (req, res) => {
-    const { leagueId } = req.params;
+    const { raceId } = req.params;
 
     try {
         const result = await pool.query(
@@ -9,9 +9,9 @@ export const getRunnersByLeague = async (req, res) => {
               c.name AS category_name
        FROM runner r
        JOIN category c ON r.category_id = c.id
-       WHERE r.league_id = $1
+       WHERE r.race_id = $1
        ORDER BY c.name ASC, r.num_dorsal ASC`,
-            [leagueId]
+            [raceId]
         );
 
         res.json(result.rows);
@@ -22,7 +22,7 @@ export const getRunnersByLeague = async (req, res) => {
 };
 
 export const createRunner = async (req, res) => {
-    const { leagueId } = req.params;
+    const { raceId } = req.params;
     const { name, num_dorsal, category_id, team_name, subscribe } = req.body;
 
     if (!name || !num_dorsal || !category_id) {
@@ -32,36 +32,39 @@ export const createRunner = async (req, res) => {
     }
 
     try {
-        const leagueRes = await pool.query("SELECT id FROM league WHERE id = $1", [leagueId]);
-        if (leagueRes.rows.length === 0) {
-            return res.status(404).json({ error: "Liga no encontrada" });
+        // Verifica que la carrera exista
+        const raceRes = await pool.query("SELECT id FROM race WHERE id = $1", [raceId]);
+        if (raceRes.rows.length === 0) {
+            return res.status(404).json({ error: "Carrera no encontrada" });
         }
 
+        // Verifica que la categoría pertenezca a la carrera
         const categoryRes = await pool.query(
-            `SELECT c.id 
-       FROM category c
-       JOIN race r ON c.race_id = r.id
-       WHERE c.id = $1 AND r.league_id = $2`,
-            [category_id, leagueId]
+            `SELECT c.id
+             FROM category c
+             WHERE c.id = $1 AND c.race_id = $2`,
+            [category_id, raceId]
         );
 
         if (categoryRes.rows.length === 0) {
-            return res.status(400).json({ error: "La categoría no pertenece a esta liga" });
+            return res.status(400).json({ error: "La categoría no pertenece a esta carrera" });
         }
 
+        // Verifica que el dorsal no esté repetido
         const existingRes = await pool.query(
-            "SELECT * FROM runner WHERE num_dorsal = $1 AND league_id = $2",
-            [num_dorsal, leagueId]
+            "SELECT * FROM runner WHERE num_dorsal = $1 AND race_id = $2",
+            [num_dorsal, raceId]
         );
         if (existingRes.rows.length > 0) {
-            return res.status(400).json({ error: "El número de dorsal ya está en uso en esta liga" });
+            return res.status(400).json({ error: "El número de dorsal ya está en uso en esta carrera" });
         }
 
+        // Inserta el corredor
         const result = await pool.query(
-            `INSERT INTO runner (name, num_dorsal, category_id, league_id, team_name, subscribe, points)
-       VALUES ($1, $2, $3, $4, $5, $6, 0)
-       RETURNING id, name, num_dorsal, category_id, league_id, team_name, subscribe, points`,
-            [name, num_dorsal, category_id, leagueId, team_name || null, subscribe ?? false]
+            `INSERT INTO runner (name, num_dorsal, category_id, team_name, subscribe, points, race_id)
+             VALUES ($1, $2, $3, $4, $5, 0, $6)
+             RETURNING id, name, num_dorsal, category_id, team_name, subscribe, points, race_id`,
+            [name, num_dorsal, category_id, team_name || null, subscribe ?? false, raceId]
         );
 
         res.status(201).json({
@@ -73,6 +76,7 @@ export const createRunner = async (req, res) => {
         res.status(500).json({ error: "Error al crear el corredor" });
     }
 };
+
 
 export const updateRunner = async (req, res) => {
     const { id } = req.params;

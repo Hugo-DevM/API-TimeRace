@@ -9,8 +9,8 @@ import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.get("/:raceId", authenticateToken, getCategoriesByRace);
-router.post("/:raceId", authenticateToken, createCategory);
+router.get("/race/:raceId", authenticateToken, getCategoriesByRace);
+router.post("/race/:raceId", authenticateToken, createCategory);
 router.put("/:id", authenticateToken, updateCategory);
 router.delete("/:id", authenticateToken, deleteCategory);
 

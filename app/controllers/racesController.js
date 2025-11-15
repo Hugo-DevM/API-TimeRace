@@ -19,6 +19,19 @@ export const getRacesByLeague = async (req, res) => {
     }
 };
 
+export const getRaceById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query("SELECT * FROM race WHERE id = $1", [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Carrera no encontrada" });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: "Error al obtener la carrera" });
+    }
+};
+
 export const createRace = async (req, res) => {
     const { leagueId } = req.params;
     const { name, race_number, location, date } = req.body;

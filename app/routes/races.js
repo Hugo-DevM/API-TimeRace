@@ -3,12 +3,14 @@ import {
     getRacesByLeague,
     createRace,
     deleteRace,
+    getRaceById
 } from "../controllers/racesController.js";
 import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.get("/:leagueId", authenticateToken, getRacesByLeague);
+router.get("/league/:leagueId", authenticateToken, getRacesByLeague);
+router.get("/:id", authenticateToken, getRaceById)
 router.post("/:leagueId", authenticateToken, createRace);
 router.delete("/:id", authenticateToken, deleteRace);
 

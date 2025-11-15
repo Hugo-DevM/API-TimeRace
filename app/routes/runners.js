@@ -9,16 +9,9 @@ import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Obtener corredores de una liga
-router.get("/:leagueId", authenticateToken, getRunnersByLeague);
-
-// Crear corredor en una liga (elige categoría desde frontend)
-router.post("/:leagueId", authenticateToken, createRunner);
-
-// Actualizar corredor
+router.get("/race/:raceId", authenticateToken, getRunnersByLeague);
+router.post("/race/:raceId", authenticateToken, createRunner);
 router.put("/:id", authenticateToken, updateRunner);
-
-// Eliminar corredor
 router.delete("/:id", authenticateToken, deleteRunner);
 
 export default router;
